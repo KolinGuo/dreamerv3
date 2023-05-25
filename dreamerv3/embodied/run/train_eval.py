@@ -113,7 +113,7 @@ def train_eval(
   checkpoint.eval_replay = eval_replay
   if args.from_checkpoint:
     checkpoint.load(args.from_checkpoint)
-  checkpoint.load_or_save()
+  checkpoint.save()  # always save checkpoint instead of resume training
   should_save(step)  # Register that we jused saved.
 
   print('Start training loop.')

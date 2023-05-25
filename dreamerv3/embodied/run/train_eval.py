@@ -106,7 +106,7 @@ def train_eval(
       logger.write(fps=True)
   driver_train.on_step(train_step)
 
-  checkpoint = embodied.Checkpoint(logdir / 'checkpoint.ckpt')
+  checkpoint = embodied.Checkpoint(logdir / 'models/model.ckpt')
   checkpoint.step = step
   checkpoint.agent = agent
   checkpoint.train_replay = train_replay

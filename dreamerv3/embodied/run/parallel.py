@@ -86,7 +86,7 @@ def learner(step, agent, replay, logger, timer, args):
   should_sync = embodied.when.Every(args.sync_every)
   updates = embodied.Counter()
 
-  checkpoint = embodied.Checkpoint(logdir / 'checkpoint.ckpt')
+  checkpoint = embodied.Checkpoint(logdir / 'models/model.ckpt')
   checkpoint.step = step
   checkpoint.agent = agent
   checkpoint.replay = replay

@@ -95,7 +95,7 @@ def train(agent, env, replay, logger, args):
       logger.write(fps=True)
   driver.on_step(train_step)
 
-  checkpoint = embodied.Checkpoint(logdir / 'checkpoint.ckpt')
+  checkpoint = embodied.Checkpoint(logdir / 'models/model.ckpt')
   timer.wrap('checkpoint', checkpoint, ['save', 'load'])
   checkpoint.step = step
   checkpoint.agent = agent

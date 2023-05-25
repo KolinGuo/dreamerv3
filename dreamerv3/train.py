@@ -12,8 +12,8 @@ warnings.filterwarnings('ignore', '.*truncated to dtype int32.*')
 directory = pathlib.Path(__file__).resolve()
 directory = directory.parent
 sys.path.append(str(directory.parent))
-sys.path.append(str(directory.parent.parent))
-sys.path.append(str(directory.parent.parent.parent))
+# sys.path.append(str(directory.parent.parent))
+# sys.path.append(str(directory.parent.parent.parent))
 __package__ = directory.name
 
 import embodied
@@ -60,7 +60,7 @@ def main(argv=None):
       replay = make_replay(config, logdir / 'replay')
       eval_replay = make_replay(config, logdir / 'eval_replay', is_eval=True)
       env = make_envs(config)
-      eval_env = make_envs(config)  # mode='eval'
+      eval_env = make_envs(config, mode='eval')
       cleanup += [env, eval_env]
       agent = agt.Agent(env.obs_space, env.act_space, step, config)
       embodied.run.train_eval(
@@ -81,7 +81,7 @@ def main(argv=None):
           agent, env, replay, eval_replay, logger, args)
 
     elif args.script == 'eval_only':
-      env = make_envs(config)  # mode='eval'
+      env = make_envs(config, mode='eval')
       cleanup.append(env)
       agent = agt.Agent(env.obs_space, env.act_space, step, config)
       embodied.run.eval_only(agent, env, logger, args)
@@ -107,14 +107,19 @@ def main(argv=None):
 
 def make_logger(parsed, logdir, step, config):
   multiplier = config.env.get(config.task.split('_')[0], {}).get('repeat', 1)
-  logger = embodied.Logger(step, [
-      embodied.logger.TerminalOutput(config.filter),
-      embodied.logger.JSONLOutput(logdir, 'metrics.jsonl'),
-      embodied.logger.JSONLOutput(logdir, 'scores.jsonl', 'episode/score'),
-      embodied.logger.TensorBoardOutput(logdir),
-      # embodied.logger.WandBOutput(logdir.name, config),
-      # embodied.logger.MLFlowOutput(logdir.name),
-  ], multiplier)
+  outputs = [
+    embodied.logger.TerminalOutput(config.filter),
+    embodied.logger.JSONLOutput(logdir, 'metrics.jsonl'),
+    embodied.logger.JSONLOutput(logdir, 'scores.jsonl', 'episode/score'),
+  ]
+  if config.logger.tensorboard.enable:
+    outputs.append(embodied.logger.TensorBoardOutput(logdir))
+  if config.logger.wandb.enable:
+    outputs.append(embodied.logger.WandBOutput(config))
+  if config.logger.mlflow.enable:
+    outputs.append(embodied.logger.MLFlowOutput(logdir.name))
+
+  logger = embodied.Logger(step, outputs, multiplier)
   return logger
 
 
@@ -153,11 +158,13 @@ def make_envs(config, **overrides):
   return embodied.BatchEnv(envs, parallel=(config.envs.parallel != 'none'))
 
 
-def make_env(config, **overrides):
+def make_env(config, mode="train", **overrides):
   # You can add custom environments by creating and returning the environment
   # instance here. Environments with different interfaces can be converted
   # using `embodied.envs.from_gym.FromGym` and `embodied.envs.from_dm.FromDM`.
   suite, task = config.task.split('_', 1)
+  if mode == "eval" and config.eval_task:
+    suite, task = config.eval_task.split('_', 1)
   ctor = {
       'dummy': 'embodied.envs.dummy:Dummy',
       'gym': 'embodied.envs.from_gym:FromGym',
@@ -169,6 +176,7 @@ def make_env(config, **overrides):
       'minecraft': 'embodied.envs.minecraft:Minecraft',
       'loconav': 'embodied.envs.loconav:LocoNav',
       'pinpad': 'embodied.envs.pinpad:PinPad',
+      'ms2': 'embodied.envs.mani_skill2:ManiSkill2',
   }[suite]
   if isinstance(ctor, str):
     module, cls = ctor.split(':')

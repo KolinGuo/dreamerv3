@@ -33,10 +33,12 @@ def train_save(agent, env, replay, logger, args):
     length = len(ep['reward']) - 1
     score = float(ep['reward'].astype(np.float64).sum())
     sum_abs_reward = float(np.abs(ep['reward']).astype(np.float64).sum())
+    max_single_reward = float(ep['reward'].max())
     logger.add({
         'length': length,
         'score': score,
         'sum_abs_reward': sum_abs_reward,
+        'max_single_reward': max_single_reward,
         'reward_rate': (np.abs(ep['reward']) >= 0.5).mean(),
     }, prefix='episode')
     print(f'Episode has {length} steps and return {score:.1f}.')
@@ -54,7 +56,9 @@ def train_save(agent, env, replay, logger, args):
         stats[f'mean_{key}'] = ep[key].mean()
       if re.match(args.log_keys_max, key):
         stats[f'max_{key}'] = ep[key].max(0).mean()
-    metrics.add(stats, prefix='stats')
+      if re.match(args.log_keys_min, key):
+        stats[f'min_{key}'] = ep[key].min(0).mean()
+    metrics.add(stats, prefix='ep_stats')
 
   epsdir = embodied.Path(args.logdir) / 'saved_episodes'
   epsdir.mkdirs()

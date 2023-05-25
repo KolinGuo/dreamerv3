@@ -3,6 +3,7 @@ defaults:
   seed: 0
   method: name
   task: dummy_disc
+  eval_task: ''
   logdir: /dev/null
   replay: uniform
   replay_size: 1e6
@@ -26,9 +27,9 @@ defaults:
     script: train
     steps: 1e10
     expl_until: 0
-    log_every: 300
-    save_every: 900
-    eval_every: 1e6
+    log_every: 300  # seconds
+    save_every: 900  # seconds
+    eval_every: 1e6  # step
     eval_initial: True
     eval_eps: 1
     eval_samples: 1
@@ -40,11 +41,23 @@ defaults:
     log_keys_sum: '^$'
     log_keys_mean: '(log_entropy)'
     log_keys_max: '^$'
+    log_keys_min: '^$'
     from_checkpoint: ''
     sync_every: 10
     # actor_addr: 'tcp://127.0.0.1:5551'
     actor_addr: 'ipc:///tmp/5551'
     actor_batch: 32
+
+  logger:
+    tensorboard: {enable: False}
+    mlflow: {enable: False}
+    wandb:
+      enable: True
+      key: none
+      project: dreamerv3
+      name: Dreamerv3_exp
+      job_type: model_rl
+      group: Dreamerv3
 
   envs: {amount: 4, parallel: process, length: 0, reset: True, restart: True, discretize: 0, checks: False}
   wrapper: {length: 0, reset: True, discretize: 0, checks: False}
@@ -54,6 +67,13 @@ defaults:
     minecraft: {size: [64, 64], break_speed: 100.0}
     dmc: {size: [64, 64], repeat: 2, camera: -1}
     loconav: {size: [64, 64], repeat: 2, camera: -1}
+    ms2:
+      obs_mode: state
+      control_mode: pd_ee_delta_pos
+      ignore_dones: True
+      save_trajectory: False
+      gsam_track_cfg: {device: "cuda:1"}
+      remove_obs_extra: ["null"]
 
   # Agent
   task_behavior: Greedy
@@ -185,6 +205,48 @@ dmc_proprio:
   .*\.units: 512
   encoder: {mlp_keys: '.*', cnn_keys: '$^'}
   decoder: {mlp_keys: '.*', cnn_keys: '$^'}
+
+ms2_state:
+
+  task: ms2_PlaceCubeInBowlXArm-v5
+  envs: {amount: 1, parallel: none, restart: False}
+  wrapper: {length: 50}
+  env:
+    ms2: {obs_mode: state}
+  run:
+    script: train_eval
+    eval_every: 1e5
+    eval_eps: 10
+    train_ratio: 64
+    log_zeros: True
+    log_keys_video: [render_image]
+    log_keys_sum: 'success|is_cube|is_bowl|is_robot|is_gripper|in_stage|sam/gt|sam/reward$|sam/success$|sam/.*_visible|sam/.*_grasped$|sam/.*_inside$|sam/in_stage[0-9]$'
+    log_keys_mean: 'log_entropy|step_times|cube|sam/.*_diff|sam/.*_acc|sam/.*_iou|sam/.*_pos_dist'
+    log_keys_max: 'success|step_times|is_cube|is_bowl|is_robot|is_gripper|in_stage|sam/gt|sam/reward$|sam/success$|sam/.*_grasped$|sam/.*_inside$|sam/in_stage[0-9]$'
+    log_keys_min: 'step_times|tcp|sam/.*_visible|sam/.*_iou|sam/tcp_to_cube_dist$'
+  encoder: {mlp_keys: '.*', cnn_keys: '$^'}
+  decoder: {mlp_keys: '.*', cnn_keys: '$^'}
+
+ms2_rgbd:
+
+  task: ms2_PlaceCubeInBowlXArm-v5
+  envs: {amount: 1, parallel: none, restart: False}
+  wrapper: {length: 50}
+  env:
+    ms2: {obs_mode: rgbd}
+  run:
+    script: train_eval
+    eval_every: 1e5
+    eval_eps: 10
+    train_ratio: 64
+    log_zeros: True
+    log_keys_video: [render_image]
+    log_keys_sum: 'success|is_cube|is_bowl|is_robot|is_gripper|in_stage|sam/gt|sam/reward$|sam/success$|sam/.*_visible|sam/.*_grasped$|sam/.*_inside$|sam/in_stage[0-9]$'
+    log_keys_mean: 'log_entropy|step_times|cube|sam/.*_diff|sam/.*_acc|sam/.*_iou|sam/.*_pos_dist'
+    log_keys_max: 'success|step_times|is_cube|is_bowl|is_robot|is_gripper|in_stage|sam/gt|sam/reward$|sam/success$|sam/.*_grasped$|sam/.*_inside$|sam/in_stage[0-9]$'
+    log_keys_min: 'step_times|tcp|sam/.*_visible|sam/.*_iou|sam/tcp_to_cube_dist$'
+  encoder: {mlp_keys: '.*', cnn_keys: 'image'}
+  decoder: {mlp_keys: '.*', cnn_keys: 'image'}
 
 bsuite:
 

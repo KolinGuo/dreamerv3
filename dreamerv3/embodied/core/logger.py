@@ -228,15 +228,21 @@ class TensorBoardOutput(AsyncOutput):
 
 class WandBOutput:
 
-  def __init__(self, pattern, logdir, config):
+  def __init__(self, config, pattern=r'.*'):
     self._pattern = re.compile(pattern)
     import wandb
+    config = dict(config)
+    wandb_config = config["logger"]["wandb"]
+    wandb_config.pop("enable")
+
+    if "key" in wandb_config:
+      wandb.login(key=wandb_config.pop("key"))
+
     wandb.init(
-        project="dreamerv3",
-        name=logdir.name,
         # sync_tensorboard=True,,
-        entity='word-bots',
-        config=dict(config),
+        dir=config["logdir"],
+        config=config,
+        **wandb_config,
     )
     self._wandb = wandb
 
@@ -263,7 +269,7 @@ class WandBOutput:
         # If the video is a float, convert it to uint8
         if np.issubdtype(value.dtype, np.floating):
           value = np.clip(255 * value, 0, 255).astype(np.uint8)
-        bystep[step][name] = wandb.Video(value)
+        bystep[step][name] = wandb.Video(value, fps=5)
 
     for step, metrics in bystep.items():
       self._wandb.log(metrics, step=step)

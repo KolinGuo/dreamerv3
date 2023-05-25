@@ -33,7 +33,12 @@ class Metrics:
     with warnings.catch_warnings():  # Ignore empty slice warnings.
       warnings.simplefilter('ignore', category=RuntimeWarning)
       for key, values in self._scalars.items():
-        result[key] = np.nanmean(values, dtype=np.float64)
+        if 'ep_stats/' in key:
+          result[key+"_max"] = np.nanmax(values).astype(np.float64)
+          result[key+"_mean"] = np.nanmean(values, dtype=np.float64)
+          result[key+"_min"] = np.nanmin(values).astype(np.float64)
+        else:
+          result[key] = np.nanmean(values, dtype=np.float64)
     reset and self.reset()
     return result
 

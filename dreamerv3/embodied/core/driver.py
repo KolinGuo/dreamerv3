@@ -36,17 +36,23 @@ class Driver:
   def on_episode(self, callback):
     self._on_episodes.append(callback)
 
-  def __call__(self, policy, steps=0, episodes=0):
+  def __call__(self, policy, steps=0, episodes=0, do_render=False):
     step, episode = 0, 0
     while step < steps or episode < episodes:
-      step, episode = self._step(policy, step, episode)
+      step, episode = self._step(policy, step, episode, do_render=do_render)
 
-  def _step(self, policy, step, episode):
+  def _step(self, policy, step, episode, do_render=False):
     assert all(len(x) == len(self._env) for x in self._acts.values())
     acts = {k: v for k, v in self._acts.items() if not k.startswith('log_')}
     obs = self._env.step(acts)
     obs = {k: convert(v) for k, v in obs.items()}
     assert all(len(x) == len(self._env) for x in obs.values()), obs
+    infos = self._env.info
+    infos = {k: convert(v) for k, v in infos.items()}
+    assert all(len(x) == len(self._env) for x in infos.values()), infos
+    if do_render:
+      renders = convert(self._env.render())
+      assert len(renders) == len(self._env), renders.shape
     acts, self._state = policy(obs, self._state, **self._kwargs)
     acts = {k: convert(v) for k, v in acts.items()}
     if obs['is_last'].any():
@@ -61,7 +67,11 @@ class Driver:
           self._eps[i].clear()
     for i in range(len(self._env)):
       trn = {k: v[i] for k, v in trns.items()}
+      info = {k: v[i] for k, v in infos.items()}
       [self._eps[i][k].append(v) for k, v in trn.items()]
+      [self._eps[i][k].append(v) for k, v in info.items() if k not in trn]
+      if do_render:
+        self._eps[i]["render_image"].append(renders[i])
       [fn(trn, i, **self._kwargs) for fn in self._on_steps]
       step += 1
     if obs['is_last'].any():

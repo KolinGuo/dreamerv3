@@ -32,15 +32,21 @@ def train_eval(
   def per_episode(ep, mode):
     length = len(ep['reward']) - 1
     score = float(ep['reward'].astype(np.float64).sum())
+    max_single_reward = float(ep['reward'].max())
     logger.add({
         'length': length, 'score': score,
         'reward_rate': (ep['reward'] - ep['reward'].min() >= 0.1).mean(),
+        'max_single_reward': max_single_reward,
     }, prefix=('episode' if mode == 'train' else f'{mode}_episode'))
     print(f'Episode has {length} steps and return {score:.1f}.')
     stats = {}
     for key in args.log_keys_video:
       if key in ep:
-        stats[f'policy_{key}'] = ep[key]
+        # Get last video index
+        _key = f'{key}/video_'
+        last_idx = max([-1] + [int(k.split(_key)[-1])
+                               for k in metrics._lasts.keys()])
+        stats[f'{_key}{last_idx+1}'] = ep[key]
     for key, value in ep.items():
       if not args.log_zeros and key not in nonzeros and (value == 0).all():
         continue
@@ -51,7 +57,9 @@ def train_eval(
         stats[f'mean_{key}'] = ep[key].mean()
       if re.match(args.log_keys_max, key):
         stats[f'max_{key}'] = ep[key].max(0).mean()
-    metrics.add(stats, prefix=f'{mode}_stats')
+      if re.match(args.log_keys_min, key):
+        stats[f'min_{key}'] = ep[key].min(0).mean()
+    metrics.add(stats, prefix=f'{mode}_ep_stats')
 
   driver_train = embodied.Driver(train_env)
   driver_train.on_episode(lambda ep, worker: per_episode(ep, mode='train'))
@@ -116,7 +124,7 @@ def train_eval(
     if should_eval(step):
       print('Starting evaluation at step', int(step))
       driver_eval.reset()
-      driver_eval(policy_eval, episodes=max(len(eval_env), args.eval_eps))
+      driver_eval(policy_eval, episodes=max(len(eval_env), args.eval_eps), do_render=True)
     driver_train(policy_train, steps=100)
     if should_save(step):
       checkpoint.save()

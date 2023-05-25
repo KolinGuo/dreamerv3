@@ -34,6 +34,14 @@ class BatchEnv(base.Env):
       obs = [ob() for ob in obs]
     return {k: np.array([ob[k] for ob in obs]) for k in obs[0]}
 
+  @property
+  def info(self):
+    if hasattr(self._envs[0], "info"):
+      keys = self._envs[0].info
+      return {k: np.array([env.info[k] for env in self._envs]) for k in keys}
+
+    return None
+
   def render(self):
     return np.stack([env.render() for env in self._envs])
 

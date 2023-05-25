@@ -30,9 +30,11 @@ def train_holdout(agent, env, train_replay, eval_replay, logger, args):
   def per_episode(ep):
     length = len(ep['reward']) - 1
     score = float(ep['reward'].astype(np.float64).sum())
+    max_single_reward = float(ep['reward'].max())
     logger.add({
         'length': length, 'score': score,
         'reward_rate': (ep['reward'] - ep['reward'].min() >= 0.1).mean(),
+        'max_single_reward': max_single_reward,
     }, prefix='episode')
     print(f'Episode has {length} steps and return {score:.1f}.')
     stats = {}
@@ -49,7 +51,9 @@ def train_holdout(agent, env, train_replay, eval_replay, logger, args):
         stats[f'mean_{key}'] = ep[key].mean()
       if re.match(args.log_keys_max, key):
         stats[f'max_{key}'] = ep[key].max(0).mean()
-    metrics.add(stats, prefix='stats')
+      if re.match(args.log_keys_min, key):
+        stats[f'min_{key}'] = ep[key].min(0).mean()
+    metrics.add(stats, prefix='ep_stats')
 
   driver = embodied.Driver(env)
   driver.on_episode(lambda ep, worker: per_episode(ep))

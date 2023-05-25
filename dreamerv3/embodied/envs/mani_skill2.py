@@ -98,6 +98,10 @@ class ManiSkill2(embodied.Env):
     assert image is not None
     return image
 
+  def seed(self, seed):
+    self._env.seed(seed)
+    [space.seed(seed) for space in self.act_space.values()]
+
   def close(self):
     try:
       self._env.close()

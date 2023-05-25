@@ -5,12 +5,15 @@ from . import base
 
 class BatchEnv(base.Env):
 
-  def __init__(self, envs, parallel):
+  def __init__(self, envs, parallel, seed=None):
     assert all(len(env) == 0 for env in envs)
     assert len(envs) > 0
     self._envs = envs
     self._parallel = parallel
     self._keys = list(self.obs_space.keys())
+
+    seed = np.random.randint(int(1e9)) if seed is None else seed
+    self.seed(seed)
 
   @property
   def obs_space(self):
@@ -44,6 +47,11 @@ class BatchEnv(base.Env):
 
   def render(self):
     return np.stack([env.render() for env in self._envs])
+
+  def seed(self, seed):
+    for i, env in enumerate(self._envs):
+      env.seed(seed + i)
+      [space.seed(seed + i) for space in env.act_space.values()]
 
   def close(self):
     for env in self._envs:

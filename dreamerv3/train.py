@@ -19,6 +19,13 @@ __package__ = directory.name
 import embodied
 from embodied import wrappers
 
+import numpy as np
+import random
+
+def set_cpu_random_seed(seed):
+  if seed is not None:
+    random.seed(seed)
+    np.random.seed(seed)
 
 def main(argv=None):
   from . import agent as agt
@@ -38,6 +45,8 @@ def main(argv=None):
   config.save(logdir / 'config.yaml')
   step = embodied.Counter()
   logger = make_logger(parsed, logdir, step, config)
+
+  set_cpu_random_seed(config.seed)
 
   cleanup = []
   try:
@@ -155,7 +164,8 @@ def make_envs(config, **overrides):
       ctor = bind(wrappers.RestartOnException, ctor)
     ctors.append(ctor)
   envs = [ctor() for ctor in ctors]
-  return embodied.BatchEnv(envs, parallel=(config.envs.parallel != 'none'))
+  return embodied.BatchEnv(envs, parallel=(config.envs.parallel != 'none'),
+                           seed=config.seed)
 
 
 def make_env(config, mode="train", **overrides):

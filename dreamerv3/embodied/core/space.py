@@ -55,6 +55,9 @@ class Space:
       return False
     return True
 
+  def seed(self, seed):
+    self._random = np.random.RandomState(seed)
+
   def sample(self):
     low, high = self.low, self.high
     if np.issubdtype(self.dtype, np.floating):

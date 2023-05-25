@@ -54,6 +54,7 @@ defaults:
     wandb:
       enable: True
       key: none
+      entity: dreamerv3
       project: dreamerv3
       name: Dreamerv3_exp
       job_type: model_rl

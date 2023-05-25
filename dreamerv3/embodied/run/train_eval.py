@@ -44,8 +44,8 @@ def train_eval(
       if key in ep:
         # Get last video index
         _key = f'{key}/video_'
-        last_idx = max([-1] + [int(k.split(_key)[-1])
-                               for k in metrics._lasts.keys()])
+        last_idx = max([-1] +
+          [int(k.split(_key)[-1]) for k in metrics._lasts.keys() if _key in k])
         stats[f'{_key}{last_idx+1}'] = ep[key]
     for key, value in ep.items():
       if not args.log_zeros and key not in nonzeros and (value == 0).all():

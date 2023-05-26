@@ -108,6 +108,8 @@ class Agent(nj.Module):
         continue
       if len(value.shape) > 3 and value.dtype == jnp.uint8:
         value = jaxutils.cast_to_compute(value) / 255.0
+      elif len(value.shape) > 3:  # depth image
+        value = jaxutils.cast_to_compute(value)
       else:
         value = value.astype(jnp.float32)
       obs[key] = value

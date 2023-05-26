@@ -67,6 +67,9 @@ class Env:
   def render(self):
     raise NotImplementedError('Returns: array')
 
+  def seed(self, seed=None):
+    pass
+
   def close(self):
     pass
 

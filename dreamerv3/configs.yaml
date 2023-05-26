@@ -246,8 +246,8 @@ ms2_rgbd:
     log_keys_mean: 'log_entropy|step_times|cube|sam/.*_diff|sam/.*_acc|sam/.*_iou|sam/.*_pos_dist'
     log_keys_max: 'success|step_times|is_cube|is_bowl|is_robot|is_gripper|in_stage|sam/gt|sam/reward$|sam/success$|sam/.*_grasped$|sam/.*_inside$|sam/in_stage[0-9]$'
     log_keys_min: 'step_times|tcp|sam/.*_visible|sam/.*_iou|sam/tcp_to_cube_dist$'
-  encoder: {mlp_keys: '.*', cnn_keys: 'image'}
-  decoder: {mlp_keys: '.*', cnn_keys: 'image'}
+  encoder: {mlp_keys: '.*', cnn_keys: 'rgb|depth', minres: 8}
+  decoder: {mlp_keys: '.*', cnn_keys: 'rgb|depth', minres: 8}
 
 bsuite:
 

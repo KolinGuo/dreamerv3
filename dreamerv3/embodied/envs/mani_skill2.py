@@ -21,7 +21,8 @@ class ManiSkill2(embodied.Env):
       env = env.env
 
     env = RenderInfoWrapper(env)
-    env = ManiSkill2_ObsWrapper(env, ignore_dones=ignore_dones)
+    env = ManiSkill2_ObsWrapper(env, ignore_dones=ignore_dones,
+                                channels_first=False)
     self._env = ExtendedEnv(env, 1.0, False)
 
     # init_obs_space

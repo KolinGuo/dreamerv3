@@ -75,6 +75,8 @@ defaults:
       save_trajectory: False
       gsam_track_cfg: {device: "cuda:1"}
       remove_obs_extra: ["null"]
+      success_needs_high_gripper: False
+      ungrasp_sparse_reward: False
 
   # Agent
   task_behavior: Greedy
@@ -227,6 +229,7 @@ ms2_state:
     log_keys_min: 'step_times|tcp|sam/.*_visible|sam/.*_iou|sam/tcp_to_cube_dist$'
   encoder: {mlp_keys: '.*', cnn_keys: '$^'}
   decoder: {mlp_keys: '.*', cnn_keys: '$^'}
+  horizon: 50
 
 ms2_rgbd:
 
@@ -246,8 +249,9 @@ ms2_rgbd:
     log_keys_mean: 'log_entropy|step_times|cube|sam/.*_diff|sam/.*_acc|sam/.*_iou|sam/.*_pos_dist'
     log_keys_max: 'success|step_times|is_cube|is_bowl|is_robot|is_gripper|in_stage|sam/gt|sam/reward$|sam/success$|sam/.*_grasped$|sam/.*_inside$|sam/in_stage[0-9]$'
     log_keys_min: 'step_times|tcp|sam/.*_visible|sam/.*_iou|sam/tcp_to_cube_dist$'
-  encoder: {mlp_keys: '.*', cnn_keys: 'rgb|depth', minres: 8}
-  decoder: {mlp_keys: '.*', cnn_keys: 'rgb|depth', minres: 8}
+  encoder: {mlp_keys: '.*', cnn_keys: 'rgb|depth', minres: 4}
+  decoder: {mlp_keys: '.*', cnn_keys: 'rgb|depth', minres: 4}
+  horizon: 50
 
 bsuite:
 
@@ -273,8 +277,13 @@ loconav:
 
 small:
   rssm.deter: 512
+  # 'encoder.cnn_depth', 'decoder.cnn_depth'
   .*\.cnn_depth: 32
+  # 'rssm.units', 'actor.units', 'critic.units',
+  # 'disag_head.units', 'cont_head.units', 'reward_head.units'
   .*\.units: 512
+  # 'actor.layers', 'critic.layers',
+  # 'disag_head.layers', 'cont_head.layers', 'reward_head.layers'
   .*\.layers: 2
 
 medium:

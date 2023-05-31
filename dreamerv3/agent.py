@@ -108,7 +108,11 @@ class Agent(nj.Module):
         continue
       if len(value.shape) > 3 and value.dtype == jnp.uint8:
         value = jaxutils.cast_to_compute(value) / 255.0
-      elif len(value.shape) > 3:  # depth image
+      elif (len(value.shape) > 3 and value.shape[-1] == 1
+          and jnp.issubdtype(value.dtype, jnp.floating)):  # depth image
+        if self.config.depth_clip_max:
+          value = jnp.clip(value, 0.0, self.config.depth_clip_max)
+          value = value / self.config.depth_clip_max  # normalize to [0, 1]
         value = jaxutils.cast_to_compute(value)
       else:
         value = value.astype(jnp.float32)

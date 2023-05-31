@@ -77,6 +77,7 @@ defaults:
       remove_obs_extra: ["null"]
       success_needs_high_gripper: False
       ungrasp_sparse_reward: False
+  depth_clip_max: 10.0
 
   # Agent
   task_behavior: Greedy

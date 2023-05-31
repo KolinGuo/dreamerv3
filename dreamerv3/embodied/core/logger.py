@@ -7,6 +7,7 @@ import re
 import time
 
 import numpy as np
+import cv2
 
 from . import path
 
@@ -230,6 +231,8 @@ class WandBOutput:
 
   def __init__(self, config, pattern=r'.*'):
     self._pattern = re.compile(pattern)
+    self.depth_clip_max = config.depth_clip_max
+
     import wandb
     config = dict(config)
     wandb_config = config["logger"]["wandb"]
@@ -265,6 +268,15 @@ class WandBOutput:
       elif len(value.shape) == 4:
         # Sanity check that the channeld dimension is last
         assert value.shape[3] in [1, 3, 4], f"Invalid shape: {value.shape}"
+        if value.shape[-1] == 1:  # depth image
+          T, H, W, C = value.shape
+          scale = 255.0
+          if not self.depth_clip_max:  # if not using normalized depth
+            scale /= 10.  # assume clip_max is 10 meters
+          value = cv2.convertScaleAbs(value, alpha=scale)
+          value = cv2.applyColorMap(
+            value.reshape(-1, W, C), cv2.COLORMAP_JET
+          ).reshape(T, H, W, C)
         value = np.transpose(value, [0, 3, 1, 2])
         # If the video is a float, convert it to uint8
         if np.issubdtype(value.dtype, np.floating):

@@ -274,9 +274,14 @@ class WandBOutput:
           if not self.depth_clip_max:  # if not using normalized depth
             scale /= 10.  # assume clip_max is 10 meters
           value = cv2.convertScaleAbs(value, alpha=scale)
-          value = cv2.applyColorMap(
+          value = cv2.cvtColor(cv2.applyColorMap(
             value.reshape(-1, W, C), cv2.COLORMAP_JET
-          ).reshape(T, H, W, 3)
+          ), cv2.COLOR_BGR2RGB).reshape(T, H, W, 3)
+          # Recompute error
+          truth, model, error = np.split(value, 3, axis=1)
+          error = (255.0 + model - truth) / 2.0
+          error = np.clip(error, 0, 255).astype(np.uint8)
+          value = np.concatenate([truth, model, error], axis=1)
         value = np.transpose(value, [0, 3, 1, 2])
         # If the video is a float, convert it to uint8
         if np.issubdtype(value.dtype, np.floating):

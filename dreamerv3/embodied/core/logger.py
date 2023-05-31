@@ -276,7 +276,7 @@ class WandBOutput:
           value = cv2.convertScaleAbs(value, alpha=scale)
           value = cv2.applyColorMap(
             value.reshape(-1, W, C), cv2.COLORMAP_JET
-          ).reshape(T, H, W, C)
+          ).reshape(T, H, W, 3)
         value = np.transpose(value, [0, 3, 1, 2])
         # If the video is a float, convert it to uint8
         if np.issubdtype(value.dtype, np.floating):

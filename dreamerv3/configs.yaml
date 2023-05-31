@@ -219,7 +219,8 @@ ms2_state:
     ms2: {obs_mode: state}
   run:
     script: train_eval
-    eval_every: 1e5
+    save_every: 3600  # seconds
+    eval_every: 1e5  # step
     eval_eps: 10
     train_ratio: 64
     log_zeros: True
@@ -241,7 +242,8 @@ ms2_rgbd:
     ms2: {obs_mode: rgbd}
   run:
     script: train_eval
-    eval_every: 1e5
+    save_every: 3600  # seconds
+    eval_every: 1e5  # step
     eval_eps: 10
     train_ratio: 64
     log_zeros: True

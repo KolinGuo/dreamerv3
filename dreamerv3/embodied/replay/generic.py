@@ -37,7 +37,7 @@ class Generic:
         'insert_wait_dur': 0,
         'insert_wait_count': 0,
     }
-    self.load()
+    # self.load()  # do not automatically load replay
 
   def __len__(self):
     return len(self.table)

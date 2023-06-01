@@ -135,6 +135,11 @@ def make_logger(parsed, logdir, step, config):
 def make_replay(
     config, directory=None, is_eval=False, rate_limit=False, **kwargs):
   assert config.replay == 'uniform' or not rate_limit
+  # Remove previous replay data if not loading from checkpoint
+  if not config.run.from_checkpoint and directory.isdir():
+    print(f"Removing previous replay directory: {directory}")
+    directory.rmtree()
+
   length = config.batch_length
   size = config.replay_size // 10 if is_eval else config.replay_size
   if config.replay == 'uniform' or is_eval:

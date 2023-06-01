@@ -22,6 +22,15 @@ def train_eval(
   print('Observation space:', embodied.format(train_env.obs_space), sep='\n')
   print('Action space:', embodied.format(train_env.act_space), sep='\n')
 
+  # Create checkpoint and load
+  checkpoint = embodied.Checkpoint(logdir / 'models/model.ckpt')
+  checkpoint.step = step
+  checkpoint.agent = agent
+  checkpoint.train_replay = train_replay
+  checkpoint.eval_replay = eval_replay
+  if args.from_checkpoint:
+    checkpoint.load(args.from_checkpoint)
+
   timer = embodied.Timer()
   timer.wrap('agent', agent, ['policy', 'train', 'report', 'save'])
   timer.wrap('env', train_env, ['step'])
@@ -106,13 +115,6 @@ def train_eval(
       logger.write(fps=True)
   driver_train.on_step(train_step)
 
-  checkpoint = embodied.Checkpoint(logdir / 'models/model.ckpt')
-  checkpoint.step = step
-  checkpoint.agent = agent
-  checkpoint.train_replay = train_replay
-  checkpoint.eval_replay = eval_replay
-  if args.from_checkpoint:
-    checkpoint.load(args.from_checkpoint)
   checkpoint.save()  # always save checkpoint instead of resume training
   should_save(step)  # Register that we jused saved.
 
